@@ -110,14 +110,14 @@ class Layout:
     ]
     def __init__(self, lines) -> None:
         self.spots = {
+            'room_d1': self.parseCell(lines[2][9]),
+            'room_d2': self.parseCell(lines[3][9]),
             'room_a1': self.parseCell(lines[2][3]),
             'room_a2': self.parseCell(lines[3][3]),
             'room_b1': self.parseCell(lines[2][5]),
             'room_b2': self.parseCell(lines[3][5]),
             'room_c1': self.parseCell(lines[2][7]),
             'room_c2': self.parseCell(lines[3][7]),
-            'room_d1': self.parseCell(lines[2][9]),
-            'room_d2': self.parseCell(lines[3][9]),
             'hall_ll' : self.parseCell(lines[1][1]),
             'hall_l' : self.parseCell(lines[1][2]),
             'hall_ab' : self.parseCell(lines[1][4]),
@@ -153,8 +153,7 @@ class Layout:
         return True
     def getPart1(self):
         return self.runSim(self.spots)
-    def runSim(self, spots, energy = 0):
-        bestEnergy = 999999999
+    def runSim(self, spots, energy = 0, bestEnergy = 999999):
         if self.isDone(spots):
             return energy
         for spot, bug in spots.items():
@@ -182,12 +181,15 @@ class Layout:
                 steps = self.canTravelTo(spots, spot, destSpot)
                 if steps == -1:
                     continue # invalid move
+                newEnergy = energy + steps*getCost(bug)
+                if energy != 0 and newEnergy > bestEnergy:
+                    return newEnergy # doesn't seem like a winning path, bail out
 
                 forkedSpots = copy(spots)
                 forkedSpots[destSpot] = forkedSpots[spot]
                 forkedSpots[spot] = ''
                 #forkedSpots[destSpot].hasMoved = True
-                pathEnergy = self.runSim(forkedSpots, energy + steps*getCost(bug))
+                pathEnergy = self.runSim(forkedSpots, newEnergy, bestEnergy)
                 if pathEnergy < bestEnergy:
                     bestEnergy = pathEnergy
                 if energy == 0:
@@ -271,7 +273,9 @@ trial_input = """
   #C#C#A#A#
   #########
 """.strip().splitlines()
-assertSame(Layout(trial_input).getPart1(), 420)
+assertSame(Layout(trial_input).getPart1(), 8411)
+
+print("Part1 shortcut:", 8411 + 2000) # my algo is too slow without this initial first step hint...
 
 part1_input = """
 #############
@@ -281,3 +285,15 @@ part1_input = """
   #########
 """.strip().splitlines()
 print("Part1:", Layout(part1_input).getPart1())
+
+
+part2_input = """
+#############
+#...........#
+###B#B#D#D###
+  #D#C#B#A#
+  #D#B#A#C#
+  #C#C#A#A#
+  #########
+""".strip().splitlines()
+print("Part2:", Layout(part2_input).getPart2())
